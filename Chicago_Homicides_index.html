@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8' />
+<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.46.0/mapbox-gl.js'></script>
+<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.46.0/mapbox-gl.css' rel='stylesheet' />
+
+
+<style>
+body {
+  margin: 0;
+  padding: 0;
+}
+
+h2,
+h3 {
+  margin: 10px;
+  font-size: 1.2em;
+}
+
+h3 {
+  font-size: 1em;
+}
+
+p {
+  font-size: 0.85em;
+  margin: 10px;
+  text-align: left;
+}
+
+.legend {
+    background-color: #fff;
+    border-radius: 3px;
+    left: 10px;
+    top: 10px;
+    width: 120px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.10);
+    font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+    padding: 10px;
+    position: absolute;
+    z-index: 1;
+}
+
+.legend h4 {
+    margin: 0 0 10px;
+}
+
+.legend div span {
+    display: inline-block;
+    height: 10px;
+    margin-right: 5px;
+    width: 10px;
+}
+
+/**
+* Create a position for the map
+* on the page */
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
+
+/**
+* Set rules for how the map overlays
+* (info box and legend) will be displayed
+* on the page. */
+.map-overlay {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.8);
+  margin-right: 20px;
+  font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  overflow: auto;
+  border-radius: 3px;
+}
+
+
+.mapboxgl-popup {
+  max-width: 400px;
+  font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  text-align: left;
+}
+
+</style>
+</head>
+<body>
+
+<div id='map'></div>
+
+<div id='homicide-legend' class='legend'>
+    <h4 align="center"> Map Key</h4>
+    <div><span style='background-color: #a6cce3'></span>High-arrest zone</div>
+    <div><span style='background-color: #fdbf6d'></span>Low-arrest zone</div>
+    <div><span style='background-color: #fff'></span></div>
+    <div>HOMICIDES:</div>
+    <div><span style='background-color: #34a1ea; border-radius: 50%'></span>Arrest made</div>
+    <div><span style='background-color: #ff9100; border-radius: 50%'></span>No arrest</div>
+    <h4></h4>
+    <em>Click on a homicide <br/> for more details</em>
+</div>
+
+
+<div class='map-overlay' id='legend'></div>
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoicnN6dW1za2kiLCJhIjoiY2ptaDBubHQzMDA4czNxazFjOHVyNjlrdyJ9.L_KApWVeX4MfPKStnpTJ3g';
+
+var map = new mapboxgl.Map({
+container: 'map',
+style: 'mapbox://styles/rszumski/cjnryit0808ca2smxcwn4ujze',
+center: [-87.672,41.876],
+zoom: 12.66,
+layers: ['homicide-data-points-chicago-8u63gs','arrests-areas-6w9f9f','high-arrest-zone-9uzw2g',
+'low-arrest-zone-47suq4']
+});
+
+
+map.addControl(new mapboxgl.NavigationControl({ position: 'top-left' }));
+
+
+map.on('click', function(e) {
+  var features = map.queryRenderedFeatures(e.point, { layers: ['homicide-data-points-chicago-8u63gs'] });
+
+  // if the features have no info, return nothing
+  if (!features.length) {
+    return;
+  }
+
+  var feature = features[0];
+
+  // Populate the popup and set its coordinates
+  // based on the feature found
+  var popup = new mapboxgl.Popup()
+  .setLngLat(feature.geometry.coordinates)
+  .setHTML('<div id=\'popup\' class=\'popup\' style=\'z-index: 10;\'> <h3> Details: </h3>' +
+  '<ul class=\'list-group\'>' + 
+  '<li class=\'list-group-item\'> ' + feature.properties.Arrest + ' </li>' +
+  '<li class=\'list-group-item\'> Date: ' + feature.properties.Date + ' </li>' +
+  '<li class=\'list-group-item\'> Time: ' + feature.properties.Time + ' </li>' +
+  '<li class=\'list-group-item\'> Description: ' + feature.properties.Description + ' </li></ul></div>')
+  .addTo(map);
+});
+
+// Use the same approach as above to indicate that the symbols are clickable
+// by changing the cursor style to 'pointer'
+map.on('mousemove', function(e) {
+  var features = map.queryRenderedFeatures(e.point, { layers: ['homicide-data-points-chicago-8u63gs'] });
+  map.getCanvas().style.cursor = features.length ? 'pointer' : '';
+});
+
+var hoveredHomicideId =  null;
+
+
+</script>
+ 
+
+</body>
+</html>
